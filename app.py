@@ -48,7 +48,27 @@ def upload_to_firebase(file_name):
 def generate_video():
     image_urls = request.json.get('image_urls').split('#')
     image_descriptions = request.json.get('image_descriptions').split('#')
-    voice_id = request.json.get('voice_id')
+    voice_id_name = request.json.get('voice_id_name')
+    if voice_id_name=="Bella":
+        voice_id="EXAVITQu4vr4xnSDxMaL"
+    if voice_id_name=="Elli":
+        voice_id="MF3mGyEYCl7XYWbV9V6O"
+    if voice_id_name=="Emily":
+        voice_id="LcfcDJNUP1GQjkzn1xUU"
+    if voice_id_name=="Grace":
+        voice_id="oWAxZDx7w5VEj9dCyTzz"
+    if voice_id_name=="Josh":
+        voice_id="TxGEqnHWrfWFTfGW9XjX"
+    if voice_id_name=="Daniel":
+        voice_id="onwK4e9ZLuTAKqWW03F9"
+    if voice_id_name=="Dave":
+        voice_id="CYw3kZ02Hs0563khs1Fj"
+    if voice_id_name=="Dorothy":
+        voice_id="ThT5KcBeYPX3keUQqHPh"
+    if voice_id_name=="Joseph":
+        voice_id="Zlb1dXrM653N07WRdFW3"
+    if voice_id_name=="Matthew":
+        voice_id="Yko7PKHZNXotIFUBG7I9"
     
     if len(image_urls) != len(image_descriptions):
         return jsonify({"error": "The number of images does not match the number of descriptions."}), 400
