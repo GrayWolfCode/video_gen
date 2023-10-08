@@ -101,8 +101,10 @@ def generate_video():
             f.write(audio_response.content)
 
         audio = AudioFileClip(audio_path)
-        img_clip = ImageClip(img_path, duration=audio.duration).set_audio(audio)
-        clips.append(img_clip)
+        img_clip_with_audio = ImageClip(img_path, duration=audio.duration).set_audio(audio)
+        img_pause_clip = ImageClip(img_path, duration=2)
+        clips.append(img_pause_clip)
+        clips.append(img_clip_with_audio)
 
     final_video = concatenate_videoclips(clips, method="compose")
     final_video_path = "output_video.mp4"
