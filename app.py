@@ -101,9 +101,18 @@ def generate_video():
             f.write(audio_response.content)
 
         audio = AudioFileClip(audio_path)
-        img_clip_with_audio = ImageClip(img_path, duration=audio.duration).set_audio(audio)
-        img_pause_clip = ImageClip(img_path, duration=0.7)
-        clips.append(img_clip_with_audio)
+    
+   
+        caption = TextClip(description, fontsize=24, color='white', size=(1024, None))
+        caption = caption.on_color(size=(1024, caption.size[1]),
+                               color=(0, 0, 0), pos=('center', 'bottom'))
+    
+    
+        img_clip_with_caption = CompositeVideoClip([ImageClip(img_path, duration=audio.duration).set_audio(audio), caption])
+    
+        img_pause_clip = ImageClip(img_path, duration=0.7).set_audio(audio)
+    
+        clips.append(img_clip_with_caption)
         clips.append(img_pause_clip)
         
 
