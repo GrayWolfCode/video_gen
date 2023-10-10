@@ -102,7 +102,7 @@ def generate_video():
 
         audio = AudioFileClip(audio_path)
         img_clip_with_audio = ImageClip(img_path, duration=audio.duration).set_audio(audio)
-        img_pause_clip = ImageClip(img_path, duration=2)
+        img_pause_clip = ImageClip(img_path, duration=0.7)
         clips.append(img_clip_with_audio)
         clips.append(img_pause_clip)
         
