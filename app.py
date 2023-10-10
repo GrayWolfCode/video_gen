@@ -103,8 +103,8 @@ def generate_video():
         audio = AudioFileClip(audio_path)
     
    
-        caption = TextClip(description, fontsize=24, color='white', size=(1024, None))
-        caption = caption.on_color(size=(1024, caption.size[1]),
+        caption = TextClip(description, fontsize=24, color='white', size=None)
+        caption = caption.on_color(
                                color=(0, 0, 0), pos=('center', 'bottom'))
     
     
