@@ -110,7 +110,7 @@ def generate_video():
         
 
     final_video = concatenate_videoclips(clips, method="compose")
-    final_video_path = f'output_{int(time.time())}.mp4'
+    final_video_path = "output.mp4"
     final_video.write_videofile(final_video_path, fps=24, audio_codec='aac')
 
     video_url = upload_to_firebase(final_video_path)
