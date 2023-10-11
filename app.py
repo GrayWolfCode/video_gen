@@ -3,6 +3,7 @@ from flask_cors import CORS
 import firebase_admin
 from firebase_admin import credentials, storage
 import os
+import time
 import requests
 from moviepy.editor import *
 
@@ -108,7 +109,7 @@ def generate_video():
         
 
     final_video = concatenate_videoclips(clips, method="compose")
-    final_video_path = "output_video.mp4"
+    final_video_path = f'output_{int(time.time())}.mp4'
     final_video.write_videofile(final_video_path, fps=24, audio_codec='aac')
 
     video_url = upload_to_firebase(final_video_path)
