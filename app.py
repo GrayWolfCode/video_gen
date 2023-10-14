@@ -5,6 +5,7 @@ from firebase_admin import credentials, storage
 import os
 import time
 import requests
+from PIL import Image, ImageDraw, ImageFont
 from moviepy.editor import *
 
 app = Flask(__name__)
@@ -45,6 +46,74 @@ def upload_to_firebase(file_name):
     blob.make_public()
     return blob.public_url
 
+def split_text_into_lines(text, font, max_width):
+    lines = []
+    current_line = ""
+    words = text.split()
+    
+    for word in words:
+        test_line = current_line + word.upper() + " "  # Convert to uppercase here
+        test_size = font.getlength(test_line)
+        
+        if test_size <= max_width:
+            current_line = test_line
+        else:
+            lines.append(current_line.strip())
+            current_line = word.upper() + " "  # Convert to uppercase here
+    
+    if current_line:
+        lines.append(current_line.strip())
+    
+    return lines
+
+def create_image_with_text(text, font_path, font_size, max_width, line_spacing, margin):
+    # Load the font
+    font = ImageFont.truetype(font_path, font_size)
+    
+    # Calculate image size based on max width and text height
+    lines = split_text_into_lines(text, font, max_width - margin['left'] - margin['right'])
+    test_bbox = font.getbbox(lines[0])
+    test_hsize = test_bbox[3] - test_bbox[1] 
+    text_height = len(lines) * (test_hsize + line_spacing)
+    
+    image_width = max_width
+    image_height = text_height + margin['top'] + margin['bottom']
+    
+    # Create a new image with a white background
+    image = Image.new('RGB', (image_width, image_height), 'black')
+    boarder = Image.new('RGB', (image_width - 10, image_height - 10), 'white')
+    image.paste(boarder, (5, 5))
+    draw = ImageDraw.Draw(image)
+    
+    # Start drawing text with the specified margins and line spacing
+    y_position = margin['top']
+    
+    for line in lines:
+        draw.text((margin['left'], y_position), line, fill='black', font=font)
+        test_cbox = font.getbbox(line)
+        test_chsize = test_cbox[3] - test_cbox[1]
+        y_position += test_chsize + line_spacing
+    
+    return image
+
+font_style = "laCartoonerie.TTF"
+font_size = 20
+max_width = 1040
+line_spacing = 10
+margin = {'top': 20, 'right': 20, 'bottom': 10, 'left': 20}
+
+def change_Image(description, input_path):
+    image = create_image_with_text(description, font_style, font_size, 1024, line_spacing, margin)
+    image.save("output_image.png")
+    image1 = Image.open(input_path)
+    image2 = Image.open('output_image.png')
+    original_width, original_height = image1.size
+    merged_image = Image.new("RGB", (original_width, original_height))
+    merged_image.paste(image1, (0, 0))
+    y_offset = original_height - image2.height
+    merged_image.paste(image2, (0, y_offset))
+    merged_image.save("merged_image.jpg")
+
 @app.route('/generate_video', methods=['POST'])
 def generate_video():
     image_urls = request.json.get('image_urls').split('#')
@@ -77,16 +146,21 @@ def generate_video():
     clips = []
 
     for i, (img_url, description) in enumerate(zip(image_urls, image_descriptions)):
+        # Download the image
         img_response = requests.get(img_url)
-        img_path = f"image_{i}.png"
-        with open(img_path, 'wb') as f:
+        input_path = f"image_{i}.png"
+        
+        with open(input_path, 'wb') as f:
             f.write(img_response.content)
+        change_Image(description, input_path)
+        img_path="merged_image.jpg"
 
+        # Fetch audio from API for the description
         audio_url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
         headers = {
             "Accept": "audio/mpeg",
             "Content-Type": "application/json",
-            "xi-api-key": ELEVEN_API_KEY
+            "xi-api-key": "25eba609d073a7be50ab5162f846ccf1"
         }
         data = {
             "text": description,
@@ -96,18 +170,20 @@ def generate_video():
                 "similarity_boost": 0.5
             }
         }
+        
+
         audio_response = requests.post(audio_url, json=data, headers=headers)
         audio_path = f"audio_{i}.mp3"
         with open(audio_path, 'wb') as f:
             f.write(audio_response.content)
-
+        
+        # Create clip with image and audio
         audio = AudioFileClip(audio_path)
         img_clip_with_audio = ImageClip(img_path, duration=audio.duration).set_audio(audio)
-        img_pause_clip = ImageClip(img_path, duration=0.7)
+    
         clips.append(img_clip_with_audio)
-        clips.append(img_pause_clip)
-        
 
+    # Concatenate all clips and save the final video
     final_video = concatenate_videoclips(clips, method="compose")
     final_video_path = f"output_{int(time.time())}.mp4"
     final_video.write_videofile(final_video_path, fps=24, audio_codec='aac')
