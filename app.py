@@ -66,6 +66,12 @@ def split_text_into_lines(text, font, max_width):
     
     return lines
 
+font_style = "laCartoonerie.TTF"
+font_size = 20
+max_width = 1040
+line_spacing = 10
+margin = {'top': 20, 'right': 20, 'bottom': 10, 'left': 20}
+
 def create_image_with_text(text, font_path, font_size, max_width, line_spacing, margin):
     # Load the font
     font = ImageFont.truetype(font_path, font_size)
@@ -96,11 +102,7 @@ def create_image_with_text(text, font_path, font_size, max_width, line_spacing, 
     
     return image
 
-font_style = "laCartoonerie.TTF"
-font_size = 20
-max_width = 1040
-line_spacing = 10
-margin = {'top': 20, 'right': 20, 'bottom': 10, 'left': 20}
+
 
 def change_Image(description, input_path):
     image = create_image_with_text(description, font_style, font_size, 1024, line_spacing, margin)
