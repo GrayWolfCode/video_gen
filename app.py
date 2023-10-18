@@ -67,10 +67,10 @@ def split_text_into_lines(text, font, max_width):
     return lines
 
 font_style = "laCartoonerie.TTF"
-font_size = 20
-max_width = 1040
-line_spacing = 10
-margin = {'top': 20, 'right': 20, 'bottom': 10, 'left': 20}
+font_size = 30
+max_width = 1560
+line_spacing = 15
+margin = {'top': 30, 'right': 30, 'bottom': 15, 'left': 30}
 
 def create_image_with_text(text, font_path, font_size, max_width, line_spacing, margin):
     # Load the font
@@ -87,8 +87,8 @@ def create_image_with_text(text, font_path, font_size, max_width, line_spacing, 
     
     # Create a new image with a white background
     image = Image.new('RGB', (image_width, image_height), 'black')
-    boarder = Image.new('RGB', (image_width - 10, image_height - 10), 'white')
-    image.paste(boarder, (5, 5))
+    boarder = Image.new('RGB', (image_width - 15, image_height - 15), 'white')
+    image.paste(boarder, (8, 8))
     draw = ImageDraw.Draw(image)
     
     # Start drawing text with the specified margins and line spacing
@@ -105,7 +105,7 @@ def create_image_with_text(text, font_path, font_size, max_width, line_spacing, 
 
 
 def change_Image(description, input_path):
-    image = create_image_with_text(description, font_style, font_size, 1024, line_spacing, margin)
+    image = create_image_with_text(description, font_style, font_size, 1536, line_spacing, margin)
     image.save("output_image.png")
     image1 = Image.open(input_path)
     image2 = Image.open('output_image.png')
@@ -121,6 +121,7 @@ def generate_video():
     image_urls = request.json.get('image_urls').split('#')
     image_descriptions = request.json.get('image_descriptions').split('#')
     voice_id_name = request.json.get('voice_id_name')
+    Is_include_text = request.json.get('is_there_text')
     if voice_id_name=="Bella":
         voice_id="EXAVITQu4vr4xnSDxMaL"
     if voice_id_name=="Elli":
@@ -146,53 +147,92 @@ def generate_video():
         return jsonify({"error": "The number of images does not match the number of descriptions."}), 400
     
     clips = []
-
-    for i, (img_url, description) in enumerate(zip(image_urls, image_descriptions)):
-        # Download the image
-        img_response = requests.get(img_url)
-        input_path = f"image_{i}.png"
+    if Is_include_text == "yes" :
+        for i, (img_url, description) in enumerate(zip(image_urls, image_descriptions)):
+            # Download the image
+            img_response = requests.get(img_url)
+            input_path = f"image_{i}.png"
         
-        with open(input_path, 'wb') as f:
-            f.write(img_response.content)
-        change_Image(description, input_path)
-        img_path="merged_image.jpg"
+            with open(input_path, 'wb') as f:
+                f.write(img_response.content)
+            change_Image(description, input_path)
+            img_path="merged_image.jpg"
 
-        # Fetch audio from API for the description
-        audio_url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
-        headers = {
-            "Accept": "audio/mpeg",
-            "Content-Type": "application/json",
-            "xi-api-key": "25eba609d073a7be50ab5162f846ccf1"
-        }
-        data = {
-            "text": description,
-            "model_id": "eleven_monolingual_v1",
-            "voice_settings": {
-                "stability": 0.5,
-                "similarity_boost": 0.5
+            # Fetch audio from API for the description
+            audio_url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+            headers = {
+                "Accept": "audio/mpeg",
+                "Content-Type": "application/json",
+                "xi-api-key": "25eba609d073a7be50ab5162f846ccf1"
             }
-        }
+            data = {
+                "text": description,
+                "model_id": "eleven_monolingual_v1",
+                "voice_settings": {
+                    "stability": 0.5,
+                    "similarity_boost": 0.5
+                }
+            }
         
 
-        audio_response = requests.post(audio_url, json=data, headers=headers)
-        audio_path = f"audio_{i}.mp3"
-        with open(audio_path, 'wb') as f:
-            f.write(audio_response.content)
+            audio_response = requests.post(audio_url, json=data, headers=headers)
+            audio_path = f"audio_{i}.mp3"
+            with open(audio_path, 'wb') as f:
+                f.write(audio_response.content)
         
-        # Create clip with image and audio
-        audio = AudioFileClip(audio_path)
-        img_clip_with_audio = ImageClip(img_path, duration=audio.duration).set_audio(audio)
+            # Create clip with image and audio
+            audio = AudioFileClip(audio_path)
+            img_clip_with_audio = ImageClip(img_path, duration=audio.duration).set_audio(audio)
     
-        clips.append(img_clip_with_audio)
+            clips.append(img_clip_with_audio)
 
-    # Concatenate all clips and save the final video
-    final_video = concatenate_videoclips(clips, method="compose")
-    final_video_path = f"output_{int(time.time())}.mp4"
-    final_video.write_videofile(final_video_path, fps=24, audio_codec='aac')
+        # Concatenate all clips and save the final video
+        final_video = concatenate_videoclips(clips, method="compose")
+        final_video_path = f"output_{int(time.time())}.mp4"
+        final_video.write_videofile(final_video_path, fps=24, audio_codec='aac')
 
-    video_url = upload_to_firebase(final_video_path)
+        video_url = upload_to_firebase(final_video_path)
     
-    return jsonify({"video_url": video_url})
+        return jsonify({"video_url": video_url})
+    if Is_include_text == "no" :
+        for i, (img_url, description) in enumerate(zip(image_urls, image_descriptions)):
+            img_response = requests.get(img_url)
+            img_path = f"image_{i}.png"
+            with open(img_path, 'wb') as f:
+                f.write(img_response.content)
 
+            audio_url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+            headers = {
+                "Accept": "audio/mpeg",
+                "Content-Type": "application/json",
+                "xi-api-key": ELEVEN_API_KEY
+            }
+            data = {
+                "text": description,
+                "model_id": "eleven_monolingual_v1",
+                "voice_settings": {
+                    "stability": 0.5,
+                    "similarity_boost": 0.5
+                }
+            }
+            audio_response = requests.post(audio_url, json=data, headers=headers)
+            audio_path = f"audio_{i}.mp3"
+            with open(audio_path, 'wb') as f:
+                f.write(audio_response.content)
+
+            audio = AudioFileClip(audio_path)
+            img_clip_with_audio = ImageClip(img_path, duration=audio.duration).set_audio(audio)
+            img_pause_clip = ImageClip(img_path, duration=0.7)
+            clips.append(img_clip_with_audio)
+            clips.append(img_pause_clip)
+        
+
+        final_video = concatenate_videoclips(clips, method="compose")
+        final_video_path = f"output_{int(time.time())}.mp4"
+        final_video.write_videofile(final_video_path, fps=24, audio_codec='aac')
+
+        video_url = upload_to_firebase(final_video_path)
+    
+        return jsonify({"video_url": video_url})
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
