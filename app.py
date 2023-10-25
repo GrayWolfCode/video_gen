@@ -68,7 +68,7 @@ def split_text_into_lines(text, font, max_width):
 
 font_style = "laCartoonerie.TTF"
 font_size = 30
-max_width = 1560
+max_width = 1370
 line_spacing = 15
 margin = {'top': 30, 'right': 30, 'bottom': 15, 'left': 30}
 
@@ -105,7 +105,7 @@ def create_image_with_text(text, font_path, font_size, max_width, line_spacing, 
 
 
 def change_Image(description, input_path):
-    image = create_image_with_text(description, font_style, font_size, 1536, line_spacing, margin)
+    image = create_image_with_text(description, font_style, font_size, 1344, line_spacing, margin)
     image.save("output_image.png")
     image1 = Image.open(input_path)
     image2 = Image.open('output_image.png')
