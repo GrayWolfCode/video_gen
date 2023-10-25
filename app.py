@@ -163,7 +163,7 @@ def generate_video():
             headers = {
                 "Accept": "audio/mpeg",
                 "Content-Type": "application/json",
-                "xi-api-key": "25eba609d073a7be50ab5162f846ccf1"
+                "xi-api-key": ELEVEN_API_KEY
             }
             data = {
                 "text": description,
